@@ -1,0 +1,68 @@
+Docker Command Bases
+
+「基本的な形」
+・docker の「何」を「どうする」のか
+
+
+「起動」
+・docker container run [option] <image> [command]（以下はcommandを使用していない例）
+例：docker container run --publish 80:80 nginx (--detach --publishを設定するとバックグラウンドで起動状態になり、ターミナルをいじれる状態になる)
+
+「確認」
+・docker container ls [option]
+例：docker container ls --all（--allをつけると起動していないコンテナの情報も閲覧できる）
+
+「停止」
+・docker container stop [option] <CONTAINER ID か NAMES>
+例：docker container stop 7fbae1e2219d
+
+「削除」
+・docker container rm [option] <container id>
+例：docker container rm 7fbae1e2219d (停止済みコンテナに有効)
+例２：docker container rm --force 7fbae1e2219d (起動中コンテナを停止せずに削除できる)←これがよく使われるっぽい（コンテナは再起動せず、必要な時に起動していらなくなったら削除するらいし）
+
+「これ便利かも？」
+docker container run --rm --detach --publish 80:80 nginx (これでバックグラウンドで動きターミナル操作で該当するコンテナをstopするだけで自動で削除される)
+docker container run --name web-server --rm --detach --publish 80:80 nginx （上記に加え、コンテナに名前をつけれるためいちいちlsコマンドで調べなくても良くなる！）※名前は一意でかつ停止済みの名前も参照するため--rmと一緒に使う方が良い！
+
+
+「オプション」	「この本での方針」	「実運用時の考え方」
+--interactive	対話操作をする場合は指定	常に指定しても害はない
+--tty	対話操作をする場合は指定	常に指定しても害はない
+--detach	対話操作をしない場合は指定	デバッグなどでは外した方が良いこともある
+--rm	常に指定	停止済コンテナを活用するかで判断する
+--name	常に指定	衝突さえ理解していれば指定して損はない
+--platform	必要な場合のみ指定	Intel or AMD CPU なら検討不要、見ても無視可
+ARM CPU ならケースバイケース
+
+
+「デフォルト命令・指定命令」
+docker container run --name nginx1 --rm --detach nginx (nginxでデフォルト命令)
+docker container run --name nginx-bash --rm --interactive --tty nginx bash（Nginx コンテナをデフォルト命令 ( nginx ) ではなく指定命令 ( bash ) で起動）
+※ コンテナないにpsコマンドがないから以下のようにアップデートする
+--------------------
+apt update
+apt install -y procps
+--------------------
+
+bashで起動すると結果は以下
+---------------------
+  PID TTY          TIME CMD
+    1 pts/0    00:00:00 bash
+  192 pts/0    00:00:00 ps
+  ---------------------
+デフォルト命令で起動すると結果は以下(ttyは指定していないと？になる)
+---------------------
+PID TTY      STAT   TIME COMMAND
+    1 ?        Ss     0:00 nginx: master process nginx -g daemon off;
+   38 pts/0    Ss     0:00 bash
+  227 pts/0    R+     0:00 ps x
+  ---------------------
+
+  「ここで抑えておこう」
+・コンテナは ある１つのコマンドを実行するため に起動している
+　　・それはデフォルト命令か指定命令の どちらか で、PID が 1 になる
+・複数のコンテナの PID = 1 は Linux の Namespace 機能により衝突しない
+【コンテナは「PID=1」のプロセスを実行するために起動する】これを意識する！
+例：「Ubuntu に PHP と MySQL と Apache を入れたコンテナを作ろう」ではなく「PHP と MySQL と Apache が必要だから３コンテナ作ろうと考える
+・コンテナは起動するたびに新しい別物として起動する
