@@ -66,3 +66,15 @@ PID TTY      STAT   TIME COMMAND
 【コンテナは「PID=1」のプロセスを実行するために起動する】これを意識する！
 例：「Ubuntu に PHP と MySQL と Apache を入れたコンテナを作ろう」ではなく「PHP と MySQL と Apache が必要だから３コンテナ作ろうと考える
 ・コンテナは起動するたびに新しい別物として起動する
+・コンテナでの操作や作成したファイルはほかのコンテナには影響しない 
+・構成変更を全コンテナに反映したいならイメージを作る（vi をどのコンテナでも使いたい場合は「Dockerfile で vi 入りイメージを作っておく）
+・コンテナのファイルを残したいならホストマシンと共有する（~/hello.txt のファイルが消えてほしくない場合は「ホストマシンにファイルを共有する」）
+
+
+「コンテナへ接続」※イメージからコンテナを起動するコマンド（container run）/ 起動中のコンテナを操作するコマンド（container exec）
+前提：docker container run --name ubuntu1 --rm --interactive --tty ubuntu:20.04（bashで起動中）
+・docker container exec --interactive --tty ubuntu1 bash（別のターミナルから接続） 
+＜execのユースケース＞
+・コンテナの中にあるログを調べたい
+・Dockerfile を書く前にbash でインストールコマンドを試し打ちしたい
+・MySQL データベースサーバのクライアント mysql を直接操作したい
